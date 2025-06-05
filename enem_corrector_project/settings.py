@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app_redacao', # ESTA LINHA DEVE SER 'app_redacao'
+    'app_redacao', 
 ]
 # ...
 
@@ -54,16 +54,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'enem_corrector_project.urls'
 
-import os # Certifique-se que esta linha está no topo do arquivo
+import os 
 from pathlib import Path
 
-# ... (restante do seu settings.py)
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [], # <<<<<< DEVE ESTAR VAZIO!
-        'APP_DIRS': True, # <<<<<< DEVE SER TRUE!
+        'DIRS': [], 
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -78,8 +77,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'enem_corrector_project.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -89,8 +86,7 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
