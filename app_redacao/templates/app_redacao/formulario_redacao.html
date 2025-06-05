@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Corretor de Redação ENEM</title>
+  <link rel="stylesheet" href="style.css" />
+    <style>
+        /* Seu CSS aqui (ou link para style.css) */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 700px;
+        }
+
+        .chat-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .input-area {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .arrow {
+            font-size: 20px;
+            color: #555;
+            margin-right: 10px;
+            line-height: 1.5; /* Alinhar com o texto da textarea */
+        }
+
+        textarea {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: 16px;
+            padding: 0;
+            margin: 0;
+            overflow-y: hidden; /* Esconder barra de rolagem inicialmente */
+            min-height: 100px; /* Altura mínima da textarea */
+            line-height: 1.5;
+        }
+
+        .send-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .send-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .gear {
+            font-size: 18px;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .results h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .results p {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .results ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+
+        .results li {
+            margin-bottom: 3px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+  <div class="container">
+    <div class="chat-box">
+      <div class="input-area">
+        <span class="arrow">➤</span>
+        <textarea id="essayTextarea" placeholder="Digite seu texto aqui"></textarea>
+      </div>
+      <button class="send-btn" id="sendBtn">
+        <span class="gear">⚙</span>
+        Enviar
+      </button>
+        <div id="resultsArea" class="results" style="display: none;">
+            <h3>Resultados da Correção:</h3>
+            <p><strong>Nota:</strong> <span id="score"></span></p>
+            <p><strong>Pontos Fortes:</strong></p>
+            <ul id="strengthsList"></ul>
+            <p><strong>Pontos Fracos:</strong></p>
+            <ul id="weaknessesList"></ul>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    const textarea = document.getElementById('essayTextarea');
+    const sendBtn = document.getElementById('sendBtn');
+    const resultsArea = document.getElementById('resultsArea');
+    const scoreSpan = document.getElementById('score');
+    const strengthsList = document.getElementById('strengthsList');
+    const weaknessesList = document.getElementById('weaknessesList');
+
+    textarea.addEventListener('input', () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    });
+
+    sendBtn.addEventListener('click', async () => {
+        const essayContent = textarea.value;
+
+        if (essayContent.trim() === '') {
+            alert('Por favor, digite sua redação antes de enviar.');
+            return;
+        }
+
+        // Desativar botão e mostrar indicador de carregamento (opcional)
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="gear">⚙</span> Enviando...';
+
+        try {
+            // Ajuste a URL para 'corrigir/' dentro do seu app 'redacao/'
+            const response = await fetch('/redacao/corrigir/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    // Para simplificar neste exemplo, estamos usando @csrf_exempt
+                    // em views.py. Em um aplicativo de produção, você precisaria lidar com tokens CSRF.
+                    // 'X-CSRFToken': getCookie('csrftoken'), // Função para obter o token CSRF
+                },
+                body: `essay_content=${encodeURIComponent(essayContent)}`
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erro ao processar a redação.');
+            }
+
+            const data = await response.json();
+
+            scoreSpan.textContent = data.score;
+
+            strengthsList.innerHTML = '';
+            data.strengths.forEach(s => {
+                const li = document.createElement('li');
+                li.textContent = s;
+                strengthsList.appendChild(li);
+            });
+
+            weaknessesList.innerHTML = '';
+            data.weaknesses.forEach(w => {
+                const li = document.createElement('li');
+                li.textContent = w;
+                weaknessesList.appendChild(li);
+            });
+
+            resultsArea.style.display = 'block'; // Mostrar seção de resultados
+
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Ocorreu um erro ao corrigir a redação: ' + error.message);
+            resultsArea.style.display = 'none'; // Esconder resultados em caso de erro
+        } finally {
+            // Reativar botão
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<span class="gear">⚙</span> Enviar';
+        }
+    });
+
+    // Função para obter o token CSRF (necessário se não usar @csrf_exempt)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // O nome do cookie começa com o que queremos?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+  </script>
+</body>
+</html>
